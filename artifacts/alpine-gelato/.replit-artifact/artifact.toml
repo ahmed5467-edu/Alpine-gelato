@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Alpine Gelato"
+description = "A premium Karachi gelato storefront with a full flavor menu, family packs, persistent cart, checkout validation, and order confirmation."
+version = "1.0.0"
+id = "artifacts/alpine-gelato"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20469
+
+[services.development]
+run = "pnpm --filter @workspace/alpine-gelato run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/alpine-gelato", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/alpine-gelato/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20469"
+BASE_PATH = "/"
