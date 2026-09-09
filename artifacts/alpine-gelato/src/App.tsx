@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -32,7 +32,18 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
   const [open, setOpen] = useState(false);
   const scrollTo = (id: string) => { setOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
   return <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f8f2e8]/90 backdrop-blur-md">
-    <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 md:h-[84px] md:px-8">
+    <div className="border-b border-white/10 bg-[#151313] text-[#fffaf3]">
+      <div className="mx-auto flex min-h-11 max-w-[1240px] items-center justify-between gap-4 px-5 py-2 md:px-8">
+        <div className="flex items-center gap-3">
+          <Sparkles size={15} className="shrink-0 text-[#ff513d]" />
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[.16em]">Free delivery all over Karachi</span>
+        </div>
+        <button data-testid="button-shop-now" onClick={() => scrollTo('menu')} className="group flex shrink-0 items-center gap-2 rounded-full bg-[#fffaf3] px-3.5 py-2 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-[#151313] transition-transform hover:-translate-y-0.5">
+          Shop now <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+        </button>
+      </div>
+    </div>
+    <div className="mx-auto flex h-[130px] max-w-[1240px] items-center justify-between px-5 md:px-8">
       <button aria-label="Back to top" onClick={() => scrollTo('home')}><Logo small /></button>
       <nav className="hidden items-center gap-8 md:flex">
         {['home','menu','about','branches','contact'].map((item) => <button key={item} onClick={() => scrollTo(item)} className="font-mono text-[10px] uppercase tracking-[.16em] text-black/65 transition-colors hover:text-[#e91519]">{item}</button>)}
@@ -50,6 +61,75 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
 
 function SectionLabel({ children, light = false }: { children: ReactNode; light?: boolean }) {
   return <div className={`mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.2em] ${light ? 'text-white/60' : 'text-black/45'}`}><span className={`h-1.5 w-1.5 rounded-full ${light ? 'bg-[#ff513d]' : 'bg-[#e91519]'}`}/>{children}</div>;
+}
+
+function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.12 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return <div ref={ref} className={`scroll-reveal ${visible ? 'is-visible' : ''} ${className}`}>{children}</div>;
+}
+
+function HeroBanner({ image }: { image?: string }) {
+  return <div data-testid="hero-banner" data-admin-field="hero-banner-image" className="relative min-h-[430px] overflow-hidden rounded-[28px] border border-white/25 bg-[#c90f17]/30 shadow-2xl md:min-h-[510px]">
+    {image ? <img src={image} alt="Alpine Gelato hero banner" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(255,250,243,.14),transparent_26%),radial-gradient(circle_at_15%_88%,rgba(255,207,151,.12),transparent_30%)]" />}
+    <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[42px] border-white/10" />
+    <div className="absolute -bottom-28 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full border-[28px] border-[#ffcf97]/10" />
+    <div className="relative flex min-h-[430px] flex-col justify-between p-6 md:min-h-[510px] md:p-12">
+      <div className="flex items-start justify-between gap-4">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[.2em] text-white/60">Hero banner space</span>
+        <span className="rounded-full border border-white/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[.14em] text-white/55">Admin editable</span>
+      </div>
+      <div className="max-w-[690px]">
+        <h1 className="font-display text-[clamp(3.7rem,10vw,7.8rem)] leading-[.86] tracking-[-.055em]">Cold comfort.<br/><em className="text-[#ffcf97]">Hot demand.</em></h1>
+        <p className="mt-7 max-w-[480px] text-base leading-relaxed text-white/80 md:text-lg">Once you get a taste of our delicious Belgian Chocolate, you’ll be begging for more.</p>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <button data-testid="button-hero-order-now" onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })} className="group rounded-full bg-[#fffaf3] px-6 py-4 text-xs font-bold uppercase tracking-[.16em] text-[#151313] transition-transform hover:-translate-y-1">
+            Order now <ArrowRight className="ml-2 inline transition-transform group-hover:translate-x-0.5" size={15}/>
+          </button>
+          <span className="border-l border-white/25 pl-4 font-mono text-[10px] uppercase tracking-[.16em] text-white/75">Free delivery<br/>all over Karachi</span>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+function FeaturedFlavor({ onOpenProduct }: { onOpenProduct: (flavor: Flavor) => void }) {
+  return <Reveal>
+    <section data-testid="featured-flavor" className="border-y border-black/10 bg-[#151313] text-[#fffaf3]">
+      <div className="mx-auto grid max-w-[1240px] items-center gap-8 px-5 py-12 md:grid-cols-[1.05fr_.95fr] md:px-8 md:py-16">
+        <div>
+          <SectionLabel light>The house favourite</SectionLabel>
+          <h2 className="font-display text-5xl leading-[.9] md:text-7xl">Killer <span className="text-[#e91519]">Belgian</span><br/>Chocolate.</h2>
+          <p className="mt-5 max-w-[450px] text-sm leading-relaxed text-white/65">Our most famous flavour, made for the first scoop and the one you come back for.</p>
+          <button data-testid="button-featured-flavor" onClick={() => onOpenProduct(flavors[20])} className="group mt-7 rounded-full bg-[#e91519] px-5 py-3.5 text-xs font-bold uppercase tracking-[.14em] text-white transition-transform hover:-translate-y-1">
+            Try the house favourite <ArrowRight className="ml-2 inline transition-transform group-hover:translate-x-0.5" size={15}/>
+          </button>
+        </div>
+        <div className="relative">
+          <img src="/assets/chocolate-detail.jpg" alt="Killer Belgian Chocolate gelato" className="h-56 w-full rounded-[24px] object-cover md:h-72" />
+          <div className="absolute -bottom-4 right-4 rounded-full bg-[#ffcf97] px-5 py-4 text-center text-[#151313] shadow-xl">
+            <span className="block font-mono text-[9px] uppercase tracking-[.13em]">The one</span>
+            <span className="font-display text-2xl">Rs. 50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </Reveal>;
 }
 
 function ProductModal({ flavor, onClose, onAdd }: { flavor: Flavor; onClose: () => void; onAdd: (item: CartItem) => void }) {
@@ -81,9 +161,22 @@ function Home({ onOpenProduct, onAdd }: { onOpenProduct: (flavor: Flavor) => voi
   const [category, setCategory] = useState<'all' | 'fruit' | 'classic'>('all');
   const filtered = useMemo(() => category === 'all' ? flavors : category === 'fruit' ? flavors.slice(0,5) : flavors.slice(5), [category]);
   return <main>
-    <section id="home" className="relative overflow-hidden bg-[#e91519] text-[#fffaf3]"><div className="absolute -right-20 -top-32 h-[420px] w-[420px] rounded-full border-[60px] border-white/10"/><div className="mx-auto grid min-h-[640px] max-w-[1240px] items-center gap-10 px-5 py-16 md:grid-cols-[1.02fr_.98fr] md:px-8 md:py-20"><div className="reveal relative z-10"><div className="mb-7 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[.22em] text-white/70"><span className="h-px w-10 bg-white/50"/>Karachi’s neighborhood gelato</div><div className="mb-7 rounded-2xl bg-black px-4 py-3 inline-block"><Logo dark /></div><h1 className="max-w-[670px] font-display text-[clamp(3.7rem,10vw,7.8rem)] leading-[.86] tracking-[-.055em]">Cold comfort.<br/><em className="text-[#ffcf97]">Hot demand.</em></h1><p className="mt-7 max-w-[480px] text-base leading-relaxed text-white/80 md:text-lg">Once you get a taste of our delicious Belgian Chocolate, you’ll be begging for more.</p><div className="mt-8 flex flex-wrap items-center gap-3"><button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior:'smooth'})} className="rounded-full bg-[#fffaf3] px-6 py-4 text-xs font-bold uppercase tracking-[.16em] text-[#151313] transition-transform hover:-translate-y-1">Order now <ArrowRight className="ml-2 inline" size={15}/></button><span className="border-l border-white/25 pl-4 font-mono text-[10px] uppercase tracking-[.16em] text-white/75">Free delivery<br/>all over Karachi</span></div></div><div className="reveal delay-2 relative flex justify-center md:justify-end"><div className="absolute -left-2 top-1/2 z-10 -translate-y-1/2 -rotate-90 whitespace-nowrap font-mono text-[10px] uppercase tracking-[.25em] text-white/55 md:left-1">Alpine / 2024</div><div className="float relative h-[390px] w-[min(87vw,460px)] overflow-hidden rounded-[50%_50%_45%_45%] border-[10px] border-white/20 shadow-2xl md:h-[520px]"><img src="/assets/gelato-hero.jpg" alt="Belgian chocolate gelato" className="h-full w-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent"/><div className="absolute bottom-8 left-8"><p className="font-mono text-[10px] uppercase tracking-[.18em] text-white/70">The house favourite</p><p className="font-display text-4xl">Killer Belgian<br/>Chocolate</p></div></div></div></div></section>
-    <section className="border-b border-black/10 bg-[#151313] text-[#fffaf3]"><div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-8"><div className="flex items-center gap-3"><Sparkles size={18} className="text-[#ff513d]"/><span className="font-mono text-[10px] uppercase tracking-[.17em]">Craving ice cream? We deliver.</span></div><span className="font-display text-2xl text-[#ffcf97] md:text-3xl">FREE DELIVERY ALL OVER KARACHI</span></div></section>
-    <section id="menu" className="mx-auto max-w-[1240px] scroll-mt-20 px-5 py-20 md:px-8 md:py-28"><div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><SectionLabel>Pick your mood</SectionLabel><h2 className="font-display text-5xl leading-none tracking-tight md:text-7xl">25 ways to<br/><span className="text-[#e91519]">make it a day.</span></h2></div><div className="flex gap-2">{(['all','fruit','classic'] as const).map(c => <button key={c} onClick={() => setCategory(c)} className={`rounded-full border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] transition-colors ${category === c ? 'border-[#151313] bg-[#151313] text-white' : 'border-black/15 hover:border-[#e91519]'}`}>{c === 'all' ? 'All flavours' : c === 'fruit' ? 'Fruit forward' : 'Creamy classics'}</button>)}</div></div><div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-4">{filtered.map((flavor, i) => <button key={flavor.name} onClick={() => onOpenProduct(flavor)} className="menu-card group text-left" style={{animationDelay:`${Math.min(i,8)*35}ms`}}><div className="relative mb-3 aspect-[.9] overflow-hidden rounded-[22px] bg-[#eadac4]"><img src={flavor.image} alt={`${flavor.name} gelato`} className="menu-image h-full w-full object-cover"/><div className="absolute inset-0 mix-blend-color" style={{backgroundColor: flavor.tone, opacity:.38}}/><span className="absolute right-2 top-2 rounded-full bg-[#fffaf3]/85 px-2 py-1 font-mono text-[9px] text-black/55">Rs. 50</span><span className="absolute bottom-2 left-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#e91519] text-white opacity-0 transition-opacity group-hover:opacity-100"><Plus size={16}/></span></div><p className="font-semibold leading-tight">{flavor.name}</p><p className="mt-1 text-xs text-black/45">{flavor.note}</p></button>)}</div></section>
+    <section id="home" className="relative overflow-hidden bg-[#e91519] text-[#fffaf3]">
+      <div className="mx-auto max-w-[1240px] px-5 pb-12 pt-10 md:px-8 md:pb-16 md:pt-14">
+        <SectionLabel light>Karachi’s neighborhood gelato</SectionLabel>
+        <Reveal><HeroBanner /></Reveal>
+      </div>
+    </section>
+    <FeaturedFlavor onOpenProduct={onOpenProduct}/>
+    <section id="menu" className="mx-auto max-w-[1240px] scroll-mt-48 px-5 py-20 md:px-8 md:py-28">
+      <Reveal>
+        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div><SectionLabel>Pick your mood</SectionLabel><h2 className="font-display text-5xl leading-none tracking-tight md:text-7xl">25 ways to<br/><span className="text-[#e91519]">make it a day.</span></h2></div>
+          <div className="flex gap-2">{(['all','fruit','classic'] as const).map(c => <button key={c} onClick={() => setCategory(c)} className={`rounded-full border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] transition-colors ${category === c ? 'border-[#151313] bg-[#151313] text-white' : 'border-black/15 hover:border-[#e91519]'}`}>{c === 'all' ? 'All flavours' : c === 'fruit' ? 'Fruit forward' : 'Creamy classics'}</button>)}</div>
+        </div>
+      </Reveal>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-4">{filtered.map((flavor, i) => <button key={flavor.name} onClick={() => onOpenProduct(flavor)} className="menu-card group text-left" style={{animationDelay:`${Math.min(i,8)*35}ms`}}><div className="relative mb-3 aspect-[.9] overflow-hidden rounded-[22px] bg-[#eadac4]"><img src={flavor.image} alt={`${flavor.name} gelato`} className="menu-image h-full w-full object-cover"/><div className="absolute inset-0 mix-blend-color" style={{backgroundColor: flavor.tone, opacity:.38}}/><span className="absolute right-2 top-2 rounded-full bg-[#fffaf3]/85 px-2 py-1 font-mono text-[9px] text-black/55">Rs. 50</span><span className="absolute bottom-2 left-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#e91519] text-white opacity-0 transition-opacity group-hover:opacity-100"><Plus size={16}/></span></div><p className="font-semibold leading-tight">{flavor.name}</p><p className="mt-1 text-xs text-black/45">{flavor.note}</p></button>)}</div>
+    </section>
     <section className="bg-[#f0e4d3] px-5 py-20 md:px-8 md:py-28"><div className="mx-auto grid max-w-[1240px] items-center gap-10 md:grid-cols-[.8fr_1.2fr]"><div className="relative order-2 md:order-1"><div className="absolute -left-4 -top-5 h-20 w-20 rounded-full border border-[#e91519]/35"/><img src="/assets/gelato-story.jpg" alt="Artisanal gelato scoops" className="aspect-square w-full max-w-[460px] rounded-[50%_46%_48%_44%] object-cover shadow-lg"/></div><div id="about" className="order-1 scroll-mt-20 md:order-2"><SectionLabel>Made for Karachi</SectionLabel><h2 className="font-display text-5xl leading-[.95] md:text-6xl">A little joy,<br/><span className="text-[#e91519]">by the scoop.</span></h2><p className="mt-7 max-w-[500px] text-[17px] leading-relaxed text-black/65">Alpine Gelato is the place for delicious ice cream, a wide variety of flavours, and the kind of Belgian Chocolate people keep coming back for. From our parlours to your doorstep, we’re serving customers across Karachi.</p><div className="mt-8 grid grid-cols-2 gap-4 border-t border-black/10 pt-5"><div><p className="font-display text-3xl">25</p><p className="font-mono text-[9px] uppercase tracking-[.15em] text-black/45">Flavours to find</p></div><div><p className="font-display text-3xl">12</p><p className="font-mono text-[9px] uppercase tracking-[.15em] text-black/45">Karachi branches</p></div></div></div></div></section>
     <section className="overflow-hidden bg-[#151313] px-5 py-20 text-[#fffaf3] md:px-8 md:py-28"><div className="mx-auto grid max-w-[1240px] items-center gap-10 md:grid-cols-[1fr_1.15fr]"><div><SectionLabel light>Not subtle. Not sorry.</SectionLabel><h2 className="font-display text-6xl leading-[.86] tracking-tight md:text-8xl">Killer<br/><span className="text-[#e91519]">Belgian</span><br/>Chocolate.</h2><p className="mt-7 max-w-[420px] text-base leading-relaxed text-white/65">Once you get a taste of our delicious Belgian Chocolate, you’ll be begging for more.</p><p className="mt-5 font-mono text-[10px] uppercase tracking-[.18em] text-[#ffcf97]">Our most famous item on the menu.</p><button onClick={() => onOpenProduct(flavors[20])} className="mt-8 rounded-full bg-[#e91519] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] text-white transition-transform hover:-translate-y-1">Try it now <ArrowRight className="ml-2 inline" size={15}/></button></div><div className="relative"><img src="/assets/chocolate-detail.jpg" alt="Rich Belgian chocolate gelato" className="h-[390px] w-full rounded-[28px] object-cover md:h-[510px]"/><div className="absolute -bottom-5 -left-5 rounded-full bg-[#ffcf97] px-6 py-5 text-center text-[#151313] shadow-xl"><span className="block font-mono text-[9px] uppercase tracking-[.13em]">The one</span><span className="font-display text-2xl">Rs. 50</span></div></div></div></section>
     <FamilyPacks onAdd={onAdd}/>
