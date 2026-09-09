@@ -24,16 +24,16 @@ const branches = [
 const queryClient = new QueryClient();
 const money = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
 
-function Logo({ dark = false, small = false }: { dark?: boolean; small?: boolean }) {
-  return <img src="/assets/alpine-logo.jpg" alt="Alpine Gelato" className={`${small ? 'w-[130px]' : 'w-[205px]'} h-auto object-contain ${dark ? 'mix-blend-screen' : 'mix-blend-multiply'}`} />;
+function Logo({ dark = false, small = false, compact = false }: { dark?: boolean; small?: boolean; compact?: boolean }) {
+  return <img src="/assets/alpine-logo.jpg" alt="Alpine Gelato" className={`${compact ? 'h-9 w-[104px] object-cover object-center' : `${small ? 'w-[130px]' : 'w-[205px]'} h-auto object-contain`} ${dark ? 'mix-blend-screen' : 'mix-blend-multiply'}`} />;
 }
 
 function Header({ count, onCart }: { count: number; onCart: () => void }) {
   const [open, setOpen] = useState(false);
   const scrollTo = (id: string) => { setOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
-  return <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f8f2e8]/90 backdrop-blur-md">
-    <div className="border-b border-white/10 bg-[#151313] text-[#fffaf3]">
-      <div className="mx-auto flex min-h-11 max-w-[1240px] items-center justify-between gap-4 px-5 py-2 md:px-8">
+  return <header className="sticky top-0 z-20 border-b border-white/10 bg-black text-white backdrop-blur-md">
+    <div className="border-b border-white/10 bg-black text-white">
+      <div className="mx-auto flex min-h-9 max-w-[1240px] items-center justify-between gap-4 px-5 py-1.5 md:px-8">
         <div className="flex items-center gap-3">
           <Sparkles size={15} className="shrink-0 text-[#ff513d]" />
           <span className="font-mono text-[10px] font-semibold uppercase tracking-[.16em]">Free delivery all over Karachi</span>
@@ -43,19 +43,19 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
         </button>
       </div>
     </div>
-    <div className="mx-auto flex h-[130px] max-w-[1240px] items-center justify-between px-5 md:px-8">
-      <button aria-label="Back to top" onClick={() => scrollTo('home')}><Logo small /></button>
+    <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-5 md:px-8">
+      <button aria-label="Back to top" onClick={() => scrollTo('home')}><Logo dark compact /></button>
       <nav className="hidden items-center gap-8 md:flex">
-        {['home','menu','about','branches','contact'].map((item) => <button key={item} onClick={() => scrollTo(item)} className="font-mono text-[10px] uppercase tracking-[.16em] text-black/65 transition-colors hover:text-[#e91519]">{item}</button>)}
+        {['home','menu','about','branches','contact'].map((item) => <button key={item} onClick={() => scrollTo(item)} className="font-mono text-[10px] uppercase tracking-[.16em] text-white transition-colors hover:text-[#ff513d]">{item}</button>)}
       </nav>
       <div className="flex items-center gap-2">
-        <button onClick={onCart} className="group flex items-center gap-2 rounded-full bg-[#151313] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#fffaf3] transition-transform hover:-translate-y-0.5">
-          <ShoppingBag size={15} strokeWidth={2.5} /><span className="hidden sm:inline">Cart</span><span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e91519] px-1 text-[10px]">{count}</span>
+        <button onClick={onCart} className="group flex items-center gap-2 rounded-full border border-white/20 bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[.12em] text-black transition-transform hover:-translate-y-0.5">
+          <ShoppingBag size={14} strokeWidth={2.5} /><span className="hidden sm:inline">Cart</span><span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#e91519] px-1 text-[9px] text-white">{count}</span>
         </button>
-        <button aria-label="Open menu" onClick={() => setOpen(!open)} className="rounded-full border border-black/15 p-2.5 md:hidden">{open ? <X size={18}/> : <MenuIcon size={18}/>}</button>
+        <button aria-label="Open menu" onClick={() => setOpen(!open)} className="rounded-full border border-white/25 p-2 md:hidden">{open ? <X size={17}/> : <MenuIcon size={17}/>}</button>
       </div>
     </div>
-    {open && <div className="mobile-sheet border-t border-black/10 bg-[#f8f2e8] px-5 py-5 md:hidden">{['home','menu','about','branches','contact'].map(item => <button key={item} onClick={() => scrollTo(item)} className="block w-full border-b border-black/10 py-3 text-left font-mono text-[11px] uppercase tracking-[.18em]">{item}</button>)}</div>}
+    {open && <div className="mobile-sheet border-t border-white/10 bg-black px-5 py-4 text-white md:hidden">{['home','menu','about','branches','contact'].map(item => <button key={item} onClick={() => scrollTo(item)} className="block w-full border-b border-white/10 py-3 text-left font-mono text-[11px] uppercase tracking-[.18em]">{item}</button>)}</div>}
   </header>;
 }
 
@@ -168,7 +168,7 @@ function Home({ onOpenProduct, onAdd }: { onOpenProduct: (flavor: Flavor) => voi
       </div>
     </section>
     <FeaturedFlavor onOpenProduct={onOpenProduct}/>
-    <section id="menu" className="mx-auto max-w-[1240px] scroll-mt-48 px-5 py-20 md:px-8 md:py-28">
+    <section id="menu" className="mx-auto max-w-[1240px] scroll-mt-32 px-5 py-20 md:px-8 md:py-28">
       <Reveal>
         <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div><SectionLabel>Pick your mood</SectionLabel><h2 className="font-display text-5xl leading-none tracking-tight md:text-7xl">25 ways to<br/><span className="text-[#e91519]">make it a day.</span></h2></div>
