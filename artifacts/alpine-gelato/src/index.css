@@ -74,3 +74,48 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 [class~='font-mono'][class~='text-white/40'] { color: rgb(255 250 243 / 0.68); }
 [class~='font-mono'][class~='text-white/45'] { color: rgb(255 250 243 / 0.74); }
 [class~='font-mono'][class~='text-white/60'] { color: rgb(255 250 243 / 0.80); }
+
+/* The menu uses the supplied signature as a quiet, on-brand watermark. */
+#menu {
+  position: relative;
+  isolation: isolate;
+  color: #fffaf3;
+}
+
+#menu::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 -50vw;
+  background-color: #151313;
+  opacity: 1;
+  pointer-events: none;
+}
+
+#menu::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 -50vw;
+  background-image:
+    linear-gradient(120deg, rgb(233 21 25 / 0.14), transparent 55%),
+    url('/assets/alpine-logo.jpg');
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 290px 290px;
+  opacity: 0.24;
+  pointer-events: none;
+}
+
+#menu > * {
+  position: relative;
+  z-index: 1;
+}
+
+#menu [class~='text-black/45'] {
+  color: rgb(255 250 243 / 0.64);
+}
+
+#menu [class~='border-black/15'] {
+  border-color: rgb(255 250 243 / 0.28);
+}
