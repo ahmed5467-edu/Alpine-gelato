@@ -24,8 +24,8 @@ const branches = [
 const queryClient = new QueryClient();
 const money = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
 
-function Logo({ dark = false, small = false, compact = false }: { dark?: boolean; small?: boolean; compact?: boolean }) {
-  return <img src="/assets/alpine-logo.jpg" alt="Alpine Gelato" className={`${compact ? 'h-9 w-[104px] object-cover object-center' : `${small ? 'w-[130px]' : 'w-[205px]'} h-auto object-contain`} ${dark ? 'mix-blend-screen' : 'mix-blend-multiply'}`} />;
+function Logo({ dark = false, small = false, compact = false, source = '/assets/alpine-logo.jpg' }: { dark?: boolean; small?: boolean; compact?: boolean; source?: string }) {
+  return <img src={source} alt="Alpine Gelato" className={`${compact ? 'h-10 w-[174px] object-cover object-center' : `${small ? 'w-[130px]' : 'w-[205px]'} h-auto object-contain`} ${dark ? 'mix-blend-screen' : 'mix-blend-multiply'}`} />;
 }
 
 function Header({ count, onCart }: { count: number; onCart: () => void }) {
@@ -44,7 +44,7 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
       </div>
     </div>
     <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-5 md:px-8">
-      <button aria-label="Back to top" onClick={() => scrollTo('home')}><Logo dark compact /></button>
+      <button aria-label="Back to top" onClick={() => scrollTo('home')}><Logo dark compact source="/assets/alpine-logo-nav.jpg" /></button>
       <nav className="hidden items-center gap-8 md:flex">
         {['home','menu','about','branches','contact'].map((item) => <button key={item} onClick={() => scrollTo(item)} className="font-mono text-[10px] uppercase tracking-[.16em] text-white transition-colors hover:text-[#ff513d]">{item}</button>)}
       </nav>
