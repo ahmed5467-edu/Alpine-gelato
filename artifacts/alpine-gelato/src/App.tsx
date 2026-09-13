@@ -24,6 +24,36 @@ const branches = [
 const queryClient = new QueryClient();
 const money = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
 
+const ADMIN_PASSWORD = 'alpine@gelato.karachi06';
+const BANNER_STORAGE_KEY = 'alpine-hero-banner';
+
+function loadStoredBanner(): string {
+  try { return localStorage.getItem(BANNER_STORAGE_KEY) || ''; } catch { return ''; }
+}
+
+function storeBanner(dataUrl: string) {
+  try { localStorage.setItem(BANNER_STORAGE_KEY, dataUrl); } catch { /* storage full — keep in-memory only */ }
+}
+
+// Reads an uploaded image and downsizes it to at most 1920×1080 JPEG so it fits localStorage.
+function fileToBannerDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1920 / img.width, 1080 / img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image file.')); };
+    img.src = url;
+  });
+}
+
 function Logo({ dark = false, small = false, compact = false, source = '/assets/alpine-logo.jpg' }: { dark?: boolean; small?: boolean; compact?: boolean; source?: string }) {
   return <img src={source} alt="Alpine Gelato" className={`${compact ? 'h-10 w-[174px] object-cover object-center' : `${small ? 'w-[130px]' : 'w-[205px]'} h-auto object-contain`} ${dark ? 'mix-blend-screen' : 'mix-blend-multiply'}`} />;
 }
@@ -108,6 +138,75 @@ function HeroBanner({ image }: { image?: string }) {
   </div>;
 }
 
+function Admin({ banner, onSave }: { banner: string; onSave: (dataUrl: string) => void }) {
+  const [unlocked, setUnlocked] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState('');
+  const [preview, setPreview] = useState(banner);
+  const [saved, setSaved] = useState(false);
+
+  if (!unlocked) {
+    const submit = () => {
+      if (password === ADMIN_PASSWORD) { setUnlocked(true); setError(''); } else { setError('Incorrect password.'); }
+    };
+    return <main className="flex min-h-[calc(100dvh-84px)] items-center justify-center bg-[#f0e4d3] px-5 py-16">
+      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="w-full max-w-sm rounded-[22px] bg-[#fffaf3] p-7 shadow-lg">
+        <SectionLabel>Admin access</SectionLabel>
+        <h1 className="font-display text-4xl leading-none">Alpine<br/>Gelato admin</h1>
+        <input
+          data-testid="admin-password-input"
+          type="password"
+          value={password}
+          onChange={(e) => { setPassword(e.target.value); setError(''); }}
+          placeholder="Password"
+          className="mt-6 w-full rounded-xl border border-black/12 bg-[#f8f2e8] px-4 py-3 text-sm outline-none focus:border-[#e91519]"
+          autoFocus
+        />
+        {error && <span className="mt-2 block text-xs text-[#e91519]">{error}</span>}
+        <button type="submit" className="mt-5 w-full rounded-xl bg-[#e91519] py-3.5 text-sm font-bold uppercase tracking-[.14em] text-white transition-transform hover:-translate-y-0.5">Unlock</button>
+      </form>
+    </main>;
+  }
+
+  const pickFile = async (file: File | undefined) => {
+    if (!file) return;
+    setSaved(false);
+    try { setPreview(await fileToBannerDataUrl(file)); } catch { setError('Could not read that image file.'); }
+  };
+
+  return <main className="min-h-[calc(100dvh-84px)] bg-[#f0e4d3] px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-[760px]">
+      <SectionLabel>Admin panel</SectionLabel>
+      <h1 className="font-display text-5xl leading-[.9] md:text-6xl">Hero banner.</h1>
+      <div className="mt-8 rounded-[22px] bg-[#fffaf3] p-6 md:p-8">
+        <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-black/70">Current banner</p>
+        <div className="aspect-video w-full overflow-hidden rounded-[18px] bg-[#eadac4]">
+          {preview
+            ? <img src={preview} alt="Hero banner preview" className="h-full w-full object-cover" />
+            : <div className="flex h-full w-full items-center justify-center text-sm text-black/35">Default hero (no custom image set)</div>}
+        </div>
+        <p className="mt-2 text-xs text-black/45">Recommended image size: 1920×1080 (16:9). Larger images are scaled down automatically.</p>
+        <input
+          data-testid="admin-banner-input"
+          type="file"
+          accept="image/*"
+          onChange={(e) => pickFile(e.target.files?.[0])}
+          className="mt-5 block w-full text-sm text-black/60 file:mr-3 file:rounded-xl file:border-0 file:bg-[#151313] file:px-5 file:py-3 file:text-xs file:font-bold file:uppercase file:tracking-[.12em] file:text-white"
+        />
+        <div className="mt-6 flex items-center gap-4">
+          <button
+            data-testid="admin-save-button"
+            onClick={() => { onSave(preview); storeBanner(preview); setSaved(true); }}
+            className="rounded-xl bg-[#e91519] px-7 py-3.5 text-sm font-bold uppercase tracking-[.14em] text-white transition-transform hover:-translate-y-0.5"
+          >Save / Update</button>
+          {saved && <span className="text-sm font-semibold text-[#a9bd78]">Banner updated ✓</span>}
+        </div>
+      </div>
+    </div>
+  </main>;
+}
+
 function FeaturedFlavor({ onOpenProduct }: { onOpenProduct: (flavor: Flavor) => void }) {
   return <Reveal>
     <section data-testid="featured-flavor" className="border-y border-black/10 bg-[#151313] text-[#fffaf3]">
@@ -157,14 +256,14 @@ function CartDrawer({ items, onClose, onChange, onCheckout }: { items: CartItem[
   </aside></div>;
 }
 
-function Home({ onOpenProduct, onAdd }: { onOpenProduct: (flavor: Flavor) => void; onAdd: (item: CartItem) => void }) {
+function Home({ onOpenProduct, onAdd, banner }: { onOpenProduct: (flavor: Flavor) => void; onAdd: (item: CartItem) => void; banner: string }) {
   const [category, setCategory] = useState<'all' | 'fruit' | 'classic'>('all');
   const filtered = useMemo(() => category === 'all' ? flavors : category === 'fruit' ? flavors.slice(0,5) : flavors.slice(5), [category]);
   return <main>
     <section id="home" className="relative overflow-hidden bg-[#e91519] text-[#fffaf3]">
       <div className="mx-auto max-w-[1240px] px-5 pb-12 pt-10 md:px-8 md:pb-16 md:pt-14">
         <SectionLabel light>Karachi’s neighborhood gelato</SectionLabel>
-        <Reveal><HeroBanner /></Reveal>
+        <Reveal><HeroBanner image={banner || undefined} /></Reveal>
       </div>
     </section>
     <FeaturedFlavor onOpenProduct={onOpenProduct}/>
@@ -217,12 +316,18 @@ function MainApp() {
   const [notice, setNotice] = useState('');
   const [cart, setCart] = useState<CartItem[]>(() => { try { return JSON.parse(localStorage.getItem('alpine-cart') || '[]'); } catch { return []; } });
   const [order, setOrder] = useState<Order | null>(() => { try { return JSON.parse(sessionStorage.getItem('alpine-order') || 'null'); } catch { return null; } });
+  const [banner, setBanner] = useState<string>(() => loadStoredBanner());
   useEffect(() => { localStorage.setItem('alpine-cart', JSON.stringify(cart)); }, [cart]);
   const add = (item: CartItem) => { setCart(current => { const found=current.find(i=>i.id===item.id); return found ? current.map(i=>i.id===item.id?{...i,qty:i.qty+1}:i) : [...current,item]; }); setNotice(`${item.name} added to cart`); setTimeout(()=>setNotice(''),2600); };
   const change = (id:string, amount:number) => setCart(c=>c.map(i=>i.id===id?{...i,qty:i.qty+amount}:i).filter(i=>i.qty>0));
   const checkout = () => { setCartOpen(false); setLocation('/checkout'); window.scrollTo(0,0); };
   const complete = (next: Order) => { setOrder(next); sessionStorage.setItem('alpine-order',JSON.stringify(next)); setCart([]); setLocation('/confirmation'); window.scrollTo(0,0); };
-  return <div className="grain min-h-[100dvh]"><Header count={cart.reduce((s,i)=>s+i.qty,0)} onCart={()=>setCartOpen(true)}/><Switch><Route path="/checkout"><Checkout items={cart} onBack={()=>setLocation('/')} onComplete={complete}/></Route><Route path="/confirmation"><Confirmation order={order || {name:'there',phone:'',address:'',notes:'',fulfillment:'delivery',items:[],total:0,orderNo:'AG-000000'}} onHome={()=>setLocation('/')}/></Route><Route path="/"><Home onOpenProduct={setSelected} onAdd={add}/><Footer/></Route></Switch>{selected && <ProductModal flavor={selected} onClose={()=>setSelected(null)} onAdd={add}/>} {cartOpen && <CartDrawer items={cart} onClose={()=>setCartOpen(false)} onChange={change} onCheckout={checkout}/>} {notice && <div className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full bg-[#151313] px-5 py-3 text-xs font-semibold text-white shadow-xl"><Check size={15} className="text-[#ffcf97]"/>{notice}</div>}</div>;
+  return <div className="grain min-h-[100dvh]"><Header count={cart.reduce((s,i)=>s+i.qty,0)} onCart={()=>setCartOpen(true)}/><Switch>
+  <Route path="/checkout"><Checkout items={cart} onBack={()=>setLocation('/')} onComplete={complete}/></Route>
+  <Route path="/confirmation"><Confirmation order={order || {name:'there',phone:'',address:'',notes:'',fulfillment:'delivery',items:[],total:0,orderNo:'AG-000000'}} onHome={()=>setLocation('/')}/></Route>
+  <Route path="/admin-gelato"><Admin banner={banner} onSave={setBanner}/></Route>
+  <Route path="/"><Home onOpenProduct={setSelected} onAdd={add} banner={banner}/><Footer/></Route>
+</Switch>{selected && <ProductModal flavor={selected} onClose={()=>setSelected(null)} onAdd={add}/>} {cartOpen && <CartDrawer items={cart} onClose={()=>setCartOpen(false)} onChange={change} onCheckout={checkout}/>} {notice && <div className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full bg-[#151313] px-5 py-3 text-xs font-semibold text-white shadow-xl"><Check size={15} className="text-[#ffcf97]"/>{notice}</div>}</div>;
 }
 
 function App() { return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><ErrorBoundary resetKey={location.href}><MainApp/></ErrorBoundary></WouterRouter><Toaster/></TooltipProvider></QueryClientProvider>; }
